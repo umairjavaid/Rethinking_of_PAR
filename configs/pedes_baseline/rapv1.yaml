@@ -1,4 +1,4 @@
-NAME: 'resnet50.base.adam'
+NAME: 'bninception.base.adam'
 
 DATASET:
   TYPE: 'pedes'
@@ -15,7 +15,7 @@ RELOAD:
   NAME: 'backbone'
 
 BACKBONE:
-  TYPE: 'resnet50'
+  TYPE: 'bninception'
 
 CLASSIFIER:
   NAME: 'linear'
