@@ -53,8 +53,9 @@ class PedesAttr(data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
 
-        self.root_path = dataset_info.root
-
+        #self.root_path = dataset_info.root
+        self.root_path = "/content/Rethinking_of_PAR/data/RAP/RAP_dataset"
+        
         if self.target_transform:
             self.attr_num = len(self.target_transform)
             print(f'{split} target_label: {self.target_transform}')
