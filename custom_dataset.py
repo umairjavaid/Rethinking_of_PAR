@@ -33,5 +33,6 @@ class RapDataset(Dataset):
         img_tensor = torch.from_numpy(img)
         img_tensor = img_tensor.permute(2, 0, 1)
         return img_tensor, labels_atr, labels_view 
-      
     
+def get_loader(path):
+    return RapDataset(path)
