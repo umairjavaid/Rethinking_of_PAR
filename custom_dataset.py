@@ -21,7 +21,8 @@ class RapDataset(Dataset):
                 
                 labels_atr2 = torch.tensor(labels_atr2)
                 labels_view = torch.tensor(labels_view)
-                self.data.append([path,labels_atr2,labels_view])
+                #self.data.append([path,labels_atr2,labels_view])
+                self.data.append([path,labels_atr2])
                         
     def __len__(self):
         return len(self.data)
