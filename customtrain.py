@@ -126,7 +126,7 @@ def main(cfg, args):
 
     valid_loader = DataLoader(
         #dataset=valid_set,
-        dataset=get_loader("/content/drive/MyDrive/vespa/RAP_train_list_52.txt"),
+        dataset=get_loader("/content/drive/MyDrive/vespa/RAP_test_list_52.txt"),
         batch_size=cfg.TRAIN.BATCH_SIZE,
         shuffle=False,
         num_workers=4,
@@ -359,7 +359,7 @@ def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, crit
 
             if args.local_rank == 0:
                 tb_visualizer_pedes(tb_writer, lr, e, train_loss, valid_loss, train_result, valid_result,
-                                    train_gt, valid_gt, train_loss_mtr, valid_loss_mtr, model, train_loader.dataset.attr_id)
+                                    train_gt, valid_gt, train_loss_mtr, valid_loss_mtr, model, "train_loader.dataset.attr_id")
 
             cur_metric = valid_result.ma
             if cur_metric > maximum:
