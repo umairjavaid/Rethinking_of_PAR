@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-import cv2
+from PIL import Image
 from torchvision import transforms
 
 class RapDataset(Dataset):
@@ -30,6 +30,7 @@ class RapDataset(Dataset):
         preprocess = transforms.Compose([
             transforms.Resize((256, 192)),
             transforms.Pad(10),
+            transforms.RandomCrop((256, 192)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -42,7 +43,7 @@ class RapDataset(Dataset):
         #img_path, labels_atr, labels_view = self.data[idx]
         img_path, labels_atr = self.data[idx]
         #print(img_path, labels_atr)
-        img_tensor = cv2.imread(img_path)
+        img_tensor = Image.open(img_path)
         if(transform == None):
             img_tensor = self.transform(img_tensor)
         return img_tensor, labels_atr.float(), img_path 
