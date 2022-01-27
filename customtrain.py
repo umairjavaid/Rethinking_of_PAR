@@ -116,7 +116,7 @@ def main(cfg, args):
 
     train_loader = DataLoader(
         #dataset=train_set,
-        dataset=get_loader("/content/drive/MyDrive/vespa/RAP_train_list_52.txt"),
+        dataset=get_loader("/content/Rethinking_of_PAR/luckyone_attribute_dataset/train.txt"),
         batch_size=cfg.TRAIN.BATCH_SIZE,
         sampler=train_sampler,
         shuffle=train_sampler is None,
@@ -127,7 +127,7 @@ def main(cfg, args):
 
     valid_loader = DataLoader(
         #dataset=valid_set,
-        dataset=get_loader("/content/drive/MyDrive/vespa/RAP_test_list_52.txt"),
+        dataset=get_loader("/content/Rethinking_of_PAR/luckyone_attribute_dataset/val.txt"),
         batch_size=cfg.TRAIN.BATCH_SIZE,
         shuffle=False,
         num_workers=4,
@@ -136,10 +136,10 @@ def main(cfg, args):
 
     if args.local_rank == 0:
         print('-' * 60)
-        print(f'{cfg.DATASET.NAME} attr_num : {train_set.attr_num}, eval_attr_num : {train_set.eval_attr_num} '
-              f'{cfg.DATASET.TRAIN_SPLIT} set: {len(train_loader.dataset)}, '
-              f'{cfg.DATASET.TEST_SPLIT} set: {len(valid_loader.dataset)}, '
-              )
+        # print(f'{cfg.DATASET.NAME} attr_num : {train_set.attr_num}, eval_attr_num : {train_set.eval_attr_num} '
+        #       f'{cfg.DATASET.TRAIN_SPLIT} set: {len(train_loader.dataset)}, '
+        #       f'{cfg.DATASET.TEST_SPLIT} set: {len(valid_loader.dataset)}, '
+        #       )
 
     #labels = train_set.label
     #label_ratio = labels.mean(0) if cfg.LOSS.SAMPLE_WEIGHT else None
@@ -150,7 +150,7 @@ def main(cfg, args):
 
     classifier = build_classifier(cfg.CLASSIFIER.NAME)(
         #nattr=train_set.attr_num,
-        nattr=51,
+        nattr=36,
         c_in=c_output,
         bn=cfg.CLASSIFIER.BN,
         pool=cfg.CLASSIFIER.POOLING,
