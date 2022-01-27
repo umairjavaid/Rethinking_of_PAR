@@ -6,7 +6,6 @@ from torchvision import transforms
 class RapDataset(Dataset):
     def __init__(self, txt_file):
         self.data = []
-        self.img_dim = (227,227)
         with open(txt_file) as f:
             lines = f.read().splitlines()
             for i in lines:
