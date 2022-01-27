@@ -92,26 +92,27 @@ def main(cfg, args):
     if args.local_rank == 0:
         print(cfg)
 
-    train_tsfm, valid_tsfm = get_transform(cfg)
-    if args.local_rank == 0:
-        print(train_tsfm)
+#     train_tsfm, valid_tsfm = get_transform(cfg)
+#     if args.local_rank == 0:
+#         print(train_tsfm)
 
-    if cfg.DATASET.TYPE == 'pedes':
-        train_set = PedesAttr(cfg=cfg, split=cfg.DATASET.TRAIN_SPLIT, transform=train_tsfm,
-                              target_transform=cfg.DATASET.TARGETTRANSFORM)
+#     if cfg.DATASET.TYPE == 'pedes':
+#         train_set = PedesAttr(cfg=cfg, split=cfg.DATASET.TRAIN_SPLIT, transform=train_tsfm,
+#                               target_transform=cfg.DATASET.TARGETTRANSFORM)
 
-        valid_set = PedesAttr(cfg=cfg, split=cfg.DATASET.VAL_SPLIT, transform=valid_tsfm,
-                              target_transform=cfg.DATASET.TARGETTRANSFORM)
-    elif cfg.DATASET.TYPE == 'multi_label':
-        train_set = COCO14(cfg=cfg, split=cfg.DATASET.TRAIN_SPLIT, transform=train_tsfm,
-                           target_transform=cfg.DATASET.TARGETTRANSFORM)
+#         valid_set = PedesAttr(cfg=cfg, split=cfg.DATASET.VAL_SPLIT, transform=valid_tsfm,
+#                               target_transform=cfg.DATASET.TARGETTRANSFORM)
+#     elif cfg.DATASET.TYPE == 'multi_label':
+#         train_set = COCO14(cfg=cfg, split=cfg.DATASET.TRAIN_SPLIT, transform=train_tsfm,
+#                            target_transform=cfg.DATASET.TARGETTRANSFORM)
 
-        valid_set = COCO14(cfg=cfg, split=cfg.DATASET.VAL_SPLIT, transform=valid_tsfm,
-                           target_transform=cfg.DATASET.TARGETTRANSFORM)
-    if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_set)
-    else:
-        train_sampler = None
+#         valid_set = COCO14(cfg=cfg, split=cfg.DATASET.VAL_SPLIT, transform=valid_tsfm,
+#                            target_transform=cfg.DATASET.TARGETTRANSFORM)
+#     if args.distributed:
+#         train_sampler = torch.utils.data.distributed.DistributedSampler(train_set)
+#     else:
+#         train_sampler = None
+    train_sampler = None
 
     train_loader = DataLoader(
         #dataset=train_set,
