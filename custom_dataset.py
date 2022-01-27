@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import cv2
+from torchvision import transforms
 
 class RapDataset(Dataset):
     def __init__(self, txt_file):
@@ -37,12 +38,13 @@ class RapDataset(Dataset):
         
     def __len__(self):
         return len(self.data)
-    def __getitem__(self, idx):
+    def __getitem__(self, idx, transform=None):
         #img_path, labels_atr, labels_view = self.data[idx]
         img_path, labels_atr = self.data[idx]
         #print(img_path, labels_atr)
         img_tensor = cv2.imread(img_path)
-        img_tensor = self.transform(img_tensor)
+        if(transform == None):
+            img_tensor = self.transform(img_tensor)
         return img_tensor, labels_atr.float(), img_path 
     
 def get_loader(path):
