@@ -20,7 +20,7 @@ import copy
 def googlenet(pretrained: bool = True) -> "GoogLeNet":
     if pretrained:
         model = GoogLeNet()
-        model.load_state_dict(torch.load("/content/googlenet-1378be20.pth"), strict=False)
+        model.load_state_dict(torch.load("/content/Rethinking_of_PAR/googlenet-1378be20.pth"), strict=False)
     return model
 
 class GoogLeNet(nn.Module):
@@ -143,7 +143,6 @@ class GoogLeNet(nn.Module):
         return v, x
 
     def forward(self, x: Tensor):
-        x = self._transform_input(x)
         v, x = self._forward(x)
         return v, x
 
