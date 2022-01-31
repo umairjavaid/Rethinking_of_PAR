@@ -26,7 +26,7 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 from torch.utils.data import DataLoader
 
-from batch_engine import valid_trainer, batch_trainer
+from batch_engine_vespa import valid_trainer, batch_trainer
 from dataset.pedes_attr.pedes import PedesAttr
 from models.base_block import FeatClassifier
 from models.model_factory import build_loss, build_classifier, build_backbone
@@ -144,22 +144,23 @@ def main(cfg, args):
     #label_ratio = labels.mean(0) if cfg.LOSS.SAMPLE_WEIGHT else None
     label_ratio = None
     
-    backbone, c_output = build_backbone(cfg.BACKBONE.TYPE, cfg.BACKBONE.MULTISCALE)
+#     backbone, c_output = build_backbone(cfg.BACKBONE.TYPE, cfg.BACKBONE.MULTISCALE)
 
 
-    classifier = build_classifier(cfg.CLASSIFIER.NAME)(
-        #nattr=train_set.attr_num,
-        nattr=51,
-        c_in=c_output,
-        bn=cfg.CLASSIFIER.BN,
-        pool=cfg.CLASSIFIER.POOLING,
-        scale =cfg.CLASSIFIER.SCALE
-    )
+#     classifier = build_classifier(cfg.CLASSIFIER.NAME)(
+#         #nattr=train_set.attr_num,
+#         nattr=51,
+#         c_in=c_output,
+#         bn=cfg.CLASSIFIER.BN,
+#         pool=cfg.CLASSIFIER.POOLING,
+#         scale =cfg.CLASSIFIER.SCALE
+#     )
 
-    model = FeatClassifier(backbone, classifier, bn_wd=cfg.TRAIN.BN_WD)
-    if args.local_rank == 0:
-        print(f"backbone: {cfg.BACKBONE.TYPE}, classifier: {cfg.CLASSIFIER.NAME}")
-        print(f"model_name: {cfg.NAME}")
+#     model = FeatClassifier(backbone, classifier, bn_wd=cfg.TRAIN.BN_WD)
+#     if args.local_rank == 0:
+#         print(f"backbone: {cfg.BACKBONE.TYPE}, classifier: {cfg.CLASSIFIER.NAME}")
+#         print(f"model_name: {cfg.NAME}")
+    model = get_model()
 
     # flops, params = get_model_complexity_info(model, (3, 256, 128), print_per_layer_stat=True)
     # print('{:<30}  {:<8}'.format('Computational complexity: ', flops))
@@ -187,6 +188,9 @@ def main(cfg, args):
     criterion = build_loss(cfg.LOSS.TYPE)(
         sample_weight=label_ratio, scale=cfg.CLASSIFIER.SCALE, size_sum=cfg.LOSS.SIZESUM, tb_writer=writer)
     criterion = criterion.cuda()
+    
+    criterion_view = nn.CrossEntropyLoss()
+    criterion_view = criterion_view.cuda()
 
     if cfg.TRAIN.BN_WD:
         param_groups = [{'params': model.module.finetune_params(),
@@ -250,6 +254,7 @@ def main(cfg, args):
                                  train_loader=train_loader,
                                  valid_loader=valid_loader,
                                  criterion=criterion,
+                                 criterion_view = criterion_view,
                                  optimizer=optimizer,
                                  lr_scheduler=lr_scheduler,
                                  path=save_model_path,
@@ -260,7 +265,7 @@ def main(cfg, args):
         print(f'{cfg.NAME},  best_metrc : {best_metric} in epoch{epoch}')
 
 
-def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, criterion, optimizer, lr_scheduler,
+def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, criterion, criterion_view, optimizer, lr_scheduler,
             path, loss_w, viz, tb_writer):
     maximum = float(-np.inf)
     best_epoch = 0
@@ -286,6 +291,7 @@ def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, crit
             model_ema=model_ema,
             train_loader=train_loader,
             criterion=criterion,
+            criterion_view = criterion_view,
             optimizer=optimizer,
             loss_w=loss_w,
             scheduler=lr_scheduler if cfg.TRAIN.LR_SCHEDULER.TYPE == 'annealing_cosine' else None,
@@ -310,6 +316,7 @@ def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, crit
                 model=model_ema.module,
                 valid_loader=valid_loader,
                 criterion=criterion,
+                criterion_view = criterion_view,
                 loss_w=loss_w
             )
         else:
@@ -320,6 +327,7 @@ def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, crit
                 model=model,
                 valid_loader=valid_loader,
                 criterion=criterion,
+                criterion_view = criterion_view,
                 loss_w=loss_w
             )
 
