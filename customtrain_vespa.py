@@ -26,7 +26,7 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 from torch.utils.data import DataLoader
 
-from batch_engine_vespa import valid_trainer, batch_trainer
+
 from dataset.pedes_attr.pedes import PedesAttr
 from models.base_block import FeatClassifier
 from models.model_factory import build_loss, build_classifier, build_backbone
@@ -38,8 +38,10 @@ from models.backbone.tresnet import tresnet
 from losses import bceloss, scaledbceloss
 from models import base_block
 
-from custom_dataset import get_loader
-
+from batch_engine_vespa import valid_trainer, batch_trainer
+import torch.nn as nn
+from vespa_dataset import get_loader
+from models.vespa import googlenet
 
 # torch.backends.cudnn.benchmark = True
 # torch.autograd.set_detect_anomaly(True)
@@ -160,7 +162,7 @@ def main(cfg, args):
 #     if args.local_rank == 0:
 #         print(f"backbone: {cfg.BACKBONE.TYPE}, classifier: {cfg.CLASSIFIER.NAME}")
 #         print(f"model_name: {cfg.NAME}")
-    model = get_model()
+    model = googlenet()
 
     # flops, params = get_model_complexity_info(model, (3, 256, 128), print_per_layer_stat=True)
     # print('{:<30}  {:<8}'.format('Computational complexity: ', flops))
@@ -179,8 +181,8 @@ def main(cfg, args):
         model_ema = ModelEmaV2(
             model, decay=cfg.TRAIN.EMA.DECAY, device='cpu' if cfg.TRAIN.EMA.FORCE_CPU else None)
 
-    if cfg.RELOAD.TYPE:
-        model = get_reload_weight(model_dir, model, pth=cfg.RELOAD.PTH)
+    # if cfg.RELOAD.TYPE:
+    #     model = get_reload_weight(model_dir, model, pth=cfg.RELOAD.PTH)
 
     loss_weight = cfg.LOSS.LOSS_WEIGHT
 
@@ -192,62 +194,66 @@ def main(cfg, args):
     criterion_view = nn.CrossEntropyLoss()
     criterion_view = criterion_view.cuda()
 
-    if cfg.TRAIN.BN_WD:
-        param_groups = [{'params': model.module.finetune_params(),
-                         'lr': cfg.TRAIN.LR_SCHEDULER.LR_FT,
-                         'weight_decay': cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY},
-                        {'params': model.module.fresh_params(),
-                         'lr': cfg.TRAIN.LR_SCHEDULER.LR_NEW,
-                         'weight_decay': cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY}]
-    else:
-        # bn parameters are not applied with weight decay
-        ft_params = seperate_weight_decay(
-            model.module.finetune_params(),
-            lr=cfg.TRAIN.LR_SCHEDULER.LR_FT,
-            weight_decay=cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY)
+    # if cfg.TRAIN.BN_WD:
+    #     param_groups = [{'params': model.parameters(),
+    #                      'lr': cfg.TRAIN.LR_SCHEDULER.LR_FT,
+    #                      'weight_decay': cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY},
+    #                     {'params': model.parameters(),
+    #                      'lr': cfg.TRAIN.LR_SCHEDULER.LR_NEW,
+    #                      'weight_decay': cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY}]
+    # else:
+    #     # bn parameters are not applied with weight decay
+    #     ft_params = seperate_weight_decay(
+    #         model.module.finetune_params(),
+    #         lr=cfg.TRAIN.LR_SCHEDULER.LR_FT,
+    #         weight_decay=cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY)
 
-        fresh_params = seperate_weight_decay(
-            model.module.fresh_params(),
-            lr=cfg.TRAIN.LR_SCHEDULER.LR_NEW,
-            weight_decay=cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY)
+    #     fresh_params = seperate_weight_decay(
+    #        model.named_parameters(),
+    #         lr=cfg.TRAIN.LR_SCHEDULER.LR_NEW,
+    #         weight_decay=cfg.TRAIN.OPTIMIZER.WEIGHT_DECAY)
 
-        param_groups = ft_params + fresh_params
+    #     param_groups = ft_params + fresh_params
 
-    if cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'sgd':
-        optimizer = torch.optim.SGD(param_groups, momentum=cfg.TRAIN.OPTIMIZER.MOMENTUM)
-    elif cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'adam':
-        optimizer = torch.optim.Adam(param_groups)
-    elif cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'adamw':
-        optimizer = AdamW(param_groups)
-    else:
-        assert None, f'{cfg.TRAIN.OPTIMIZER.TYPE} is not implemented'
+    # if cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'sgd':
+    #     optimizer = torch.optim.SGD(param_groups, momentum=cfg.TRAIN.OPTIMIZER.MOMENTUM)
+    # if cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'adam':
+    #     optimizer = torch.optim.Adam(param_groups)
+    # elif cfg.TRAIN.OPTIMIZER.TYPE.lower() == 'adamw':
+    #     optimizer = AdamW(param_groups)
+    # else:
+    #     assert None, f'{cfg.TRAIN.OPTIMIZER.TYPE} is not implemented'
 
-    if cfg.TRAIN.LR_SCHEDULER.TYPE == 'plateau':
-        lr_scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=4)
-        if cfg.CLASSIFIER.BN:
-            assert False, 'BN can not compatible with ReduceLROnPlateau'
-    elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'multistep':
-        lr_scheduler = MultiStepLR(optimizer, milestones=cfg.TRAIN.LR_SCHEDULER.LR_STEP, gamma=0.1)
-    elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'annealing_cosine':
-        lr_scheduler = CosineAnnealingLR_with_Restart(
-            optimizer,
-            T_max=(cfg.TRAIN.MAX_EPOCH + 5) * len(train_loader),
-            T_mult=1,
-            eta_min=cfg.TRAIN.LR_SCHEDULER.LR_NEW * 0.001
-    )
-    elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'warmup_cosine':
+    # if cfg.TRAIN.LR_SCHEDULER.TYPE == 'plateau':
+    #     lr_scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=4)
+    #     if cfg.CLASSIFIER.BN:
+    #         assert False, 'BN can not compatible with ReduceLROnPlateau'
+    # elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'multistep':
+    #     lr_scheduler = MultiStepLR(optimizer, milestones=cfg.TRAIN.LR_SCHEDULER.LR_STEP, gamma=0.1)
+    # elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'annealing_cosine':
+    #     lr_scheduler = CosineAnnealingLR_with_Restart(
+    #         optimizer,
+    #         T_max=(cfg.TRAIN.MAX_EPOCH + 5) * len(train_loader),
+    #         T_mult=1,
+    #         eta_min=cfg.TRAIN.LR_SCHEDULER.LR_NEW * 0.001
+    # )
+    # elif cfg.TRAIN.LR_SCHEDULER.TYPE == 'warmup_cosine':
 
 
-        lr_scheduler = CosineLRScheduler(
-            optimizer,
-            t_initial=cfg.TRAIN.MAX_EPOCH,
-            lr_min=1e-5,  # cosine lr 最终回落的位置
-            warmup_lr_init=1e-4,
-            warmup_t=cfg.TRAIN.MAX_EPOCH * cfg.TRAIN.LR_SCHEDULER.WMUP_COEF,
-        )
+    #     lr_scheduler = CosineLRScheduler(
+    #         optimizer,
+    #         t_initial=cfg.TRAIN.MAX_EPOCH,
+    #         lr_min=1e-5,  # cosine lr 最终回落的位置
+    #         warmup_lr_init=1e-4,
+    #         warmup_t=cfg.TRAIN.MAX_EPOCH * cfg.TRAIN.LR_SCHEDULER.WMUP_COEF,
+    #     )
 
-    else:
-        assert False, f'{cfg.LR_SCHEDULER.TYPE} has not been achieved yet'
+    # else:
+    #     assert False, f'{cfg.LR_SCHEDULER.TYPE} has not been achieved yet'
+
+    params_to_update = model.parameters()
+    optimizer = torch.optim.Adam(params_to_update, lr=0.0002)
+    lr_scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=4)
 
     best_metric, epoch = trainer(cfg, args, epoch=cfg.TRAIN.MAX_EPOCH,
                                  model=model, model_ema=model_ema,
@@ -281,7 +287,7 @@ def trainer(cfg, args, epoch, model, model_ema, train_loader, valid_loader, crit
         if args.distributed:
             train_loader.sampler.set_epoch(epoch)
 
-        lr = optimizer.param_groups[1]['lr']
+        lr = 0.0002
 
         train_loss, train_gt, train_probs, train_imgs, train_logits, train_loss_mtr = batch_trainer(
             cfg,
