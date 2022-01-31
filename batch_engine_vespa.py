@@ -9,6 +9,7 @@ from tqdm import tqdm
 from tools.distributed import reduce_tensor
 from tools.utils import AverageMeter, to_scalar, time_str
 
+from configs import cfg, update_config
 
 def logits4pred(criterion, logits_list):
     if criterion.__class__.__name__.lower() in ['bceloss']:
@@ -34,15 +35,16 @@ def batch_trainer(cfg, args, epoch, model, model_ema, train_loader, criterion, c
     imgname_list = []
     loss_mtr_list = []
 
-    lr = optimizer.param_groups[1]['lr']
+    lr = 0.0002
 
     for step, (imgs, gt_label, gt_view, imgname) in enumerate(train_loader):
         iter_num = epoch * len(train_loader) + step
 
         batch_time = time.time()
         imgs, gt_label, gt_view = imgs.cuda(), gt_label.cuda(), gt_view.cuda()
-        train_logits, feat = model(imgs, gt_label)
+        train_logits, feat = model(imgs)
         print("train_logits: ",train_logits)
+        print("HAH"*10)
         exit()
 
         loss_list, loss_mtr = criterion(train_logits, gt_label)
@@ -126,7 +128,7 @@ def valid_trainer(cfg, args, epoch, model, valid_loader, criterion, criterion_vi
     loss_mtr_list = []
 
     with torch.no_grad():
-        for step, (imgs, gt_label, imgname) in enumerate(tqdm(valid_loader)):
+        for step, (imgs, gt_label, gt_view, imgname) in enumerate(tqdm(valid_loader)):
             imgs = imgs.cuda()
             gt_label = gt_label.cuda()
             gt_list.append(gt_label.cpu().numpy())
