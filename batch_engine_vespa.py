@@ -20,7 +20,7 @@ def logits4pred(criterion, logits_list):
     return probs, logits
 
 
-def batch_trainer(cfg, args, epoch, model, model_ema, train_loader, criterion, optimizer, loss_w=[1, ], scheduler=None):
+def batch_trainer_vespa(cfg, args, epoch, model, model_ema, train_loader, criterion_attr, criterion_view,  optimizer, loss_w=[1, ], scheduler=None):
     model.train()
     epoch_time = time.time()
 
