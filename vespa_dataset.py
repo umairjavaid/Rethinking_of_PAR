@@ -39,8 +39,8 @@ class RapDataset(Dataset):
     def __len__(self):
         return len(self.data)
     def __getitem__(self, idx, transform=None):
-        #img_path, labels_atr, labels_view = self.data[idx]
-        img_path, labels_atr = self.data[idx]
+        img_path, labels_atr, labels_view = self.data[idx]
+        #img_path, labels_atr = self.data[idx]
         #print(img_path, labels_atr)
         img_tensor = Image.open(img_path)
         if(transform == None):
