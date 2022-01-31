@@ -20,7 +20,7 @@ def logits4pred(criterion, logits_list):
     return probs, logits
 
 
-def batch_trainer_vespa(cfg, args, epoch, model, model_ema, train_loader, criterion_attr, criterion_view,  optimizer, loss_w=[1, ], scheduler=None):
+def batch_trainer(cfg, args, epoch, model, model_ema, train_loader, criterion, criterion_view,  optimizer, loss_w=[1, ], scheduler=None):
     model.train()
     epoch_time = time.time()
 
@@ -36,13 +36,14 @@ def batch_trainer_vespa(cfg, args, epoch, model, model_ema, train_loader, criter
 
     lr = optimizer.param_groups[1]['lr']
 
-    for step, (imgs, gt_label, imgname) in enumerate(train_loader):
+    for step, (imgs, gt_label, gt_view, imgname) in enumerate(train_loader):
         iter_num = epoch * len(train_loader) + step
 
         batch_time = time.time()
-        imgs, gt_label = imgs.cuda(), gt_label.cuda()
+        imgs, gt_label, gt_view = imgs.cuda(), gt_label.cuda(), gt_view.cuda()
         train_logits, feat = model(imgs, gt_label)
-
+        print("train_logits: ",train_logits)
+        exit()
 
         loss_list, loss_mtr = criterion(train_logits, gt_label)
 
@@ -113,7 +114,7 @@ def batch_trainer_vespa(cfg, args, epoch, model, model_ema, train_loader, criter
     return train_loss, gt_label, preds_probs, imgname_list, preds_logits, loss_mtr_list
 
 
-def valid_trainer(cfg, args, epoch, model, valid_loader, criterion, loss_w=[1, ]):
+def valid_trainer(cfg, args, epoch, model, valid_loader, criterion, criterion_view, loss_w=[1, ]):
     model.eval()
     loss_meter = AverageMeter()
     subloss_meters = [AverageMeter() for i in range(len(loss_w))]
