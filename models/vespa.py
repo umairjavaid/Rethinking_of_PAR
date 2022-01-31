@@ -24,29 +24,18 @@ def googlenet(pretrained: bool = True) -> "GoogLeNet":
     return model
 
 class GoogLeNet(nn.Module):
-    __constants__ = ['aux_logits', 'transform_input']
-
     def __init__(
         self,
         num_classes: int = 51,
-        aux_logits: bool = False,
-        transform_input: bool = True,
-        init_weights: Optional[bool] = False,
         blocks: Optional[List[Callable[..., nn.Module]]] = None
     ) -> None:
         super(GoogLeNet, self).__init__()
         if blocks is None:
             blocks = [BasicConv2d, Inception]
-        if init_weights is None:
-            warnings.warn('The default weight initialization of GoogleNet will be changed in future releases of '
-                          'torchvision. If you wish to keep the old behavior (which leads to long initialization times'
-                          ' due to scipy/scipy#11299), please set init_weights=True.', FutureWarning)
-            init_weights = True
+ 
         assert len(blocks) == 2
         conv_block = blocks[0]
         inception_block = blocks[1]
-
-        self.transform_input = transform_input
 
         self.conv1 = conv_block(3, 64, kernel_size=7, stride=2, padding=3)
         self.maxpool1 = nn.MaxPool2d(3, stride=2, ceil_mode=True)
@@ -86,25 +75,6 @@ class GoogLeNet(nn.Module):
         self.maxpool7 = nn.MaxPool2d(7, stride=1, ceil_mode=True)
         self.fc5 = nn.Linear(1024, num_classes)
         self.sigmoid = nn.Sigmoid()
-
-        if init_weights:
-            self._initialize_weights()
-
-    def _initialize_weights(self) -> None:
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=0.01, a=-2, b=2)
-            elif isinstance(m, nn.BatchNorm2d):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-
-    def _transform_input(self, x: Tensor) -> Tensor:
-        if self.transform_input:
-            x_ch0 = torch.unsqueeze(x[:, 0], 1) * (0.229 / 0.5) + (0.485 - 0.5) / 0.5
-            x_ch1 = torch.unsqueeze(x[:, 1], 1) * (0.224 / 0.5) + (0.456 - 0.5) / 0.5
-            x_ch2 = torch.unsqueeze(x[:, 2], 1) * (0.225 / 0.5) + (0.406 - 0.5) / 0.5
-            x = torch.cat((x_ch0, x_ch1, x_ch2), 1)
-        return x
 
     def _forward(self, x: Tensor) -> Tuple[Tensor, Optional[Tensor], Optional[Tensor]]:
         # N x 3 x 224 x 224
