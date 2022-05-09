@@ -160,8 +160,9 @@ Install requirements
    !cp /content/drive/MyDrive/aletheia/luckyone_attribute_dataset.zip .
    #unzip dataset
    !unzip luckyone_attribute_dataset.zip
-   
-   #make dataset folder dir structure according to repo
+   ```
+make dataset folder dir structure according to repo
+   ```
    %cd /
    !mkdir app
    %cd app
@@ -185,8 +186,9 @@ Install requirements
    
    #copy dataset to this folder
    !cp -r /content/Rethinking_of_PAR/luckyone_attribute_dataset/total_images_with_augmentation /app/mnt/565CA5115CA4ED45/project/attributes/training_pipline/train_vespa/dataset/luckymall_bonanza_combined_AgeGender_equalize
-   
-   #start trainging
+   ```
+start trainging
+   ```
    !sh train_gpu.sh
    ```
 
