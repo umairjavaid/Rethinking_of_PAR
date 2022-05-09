@@ -7,7 +7,7 @@
 
 #CUDA_VISIBLE_DEVICES=0 python train.py --cfg ./configs/pedes_baseline/peta_zs.yaml
 
-CUDA_VISIBLE_DEVICES=0 python train.py --cfg ./configs/pedes_baseline/rapv1.yaml
+CUDA_VISIBLE_DEVICES=0 python trainvespa.py --cfg ./configs/pedes_baseline/rapv1.yaml
 
 #CUDA_VISIBLE_DEVICES=0 python train.py --cfg ./configs/pedes_baseline/rapv2.yaml
 
