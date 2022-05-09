@@ -137,3 +137,56 @@ If you use this method or this code in your research, please cite as:
     }
 
 
+## Training custom dataset(google colab)
+
+Install requirements 
+
+   ```
+   #clone this repo
+   !git clone https://github.com/umairjavaid/Rethinking_of_PAR.git
+   #open cloned folder
+   %cd /content/Rethinking_of_PAR/
+   #install mmcv-full
+   !pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
+   #install visdom
+   !pip install visdom
+   #install yacs
+   !pip install yacs
+   #install timm
+   !pip install timm
+   #install inplace-abn
+   !pip install inplace-abn
+   #copy dataset zip file 
+   !cp /content/drive/MyDrive/aletheia/luckyone_attribute_dataset.zip .
+   #unzip dataset
+   !unzip luckyone_attribute_dataset.zip
+   
+   #make dataset folder dir structure according to repo
+   %cd /
+   !mkdir app
+   %cd app
+   !mkdir mnt
+   %cd mnt
+   !mkdir 565CA5115CA4ED45
+   %cd 565CA5115CA4ED45 
+   !mkdir project
+   %cd project
+   !mkdir attributes
+   %cd attributes
+   !mkdir training_pipline
+   %cd training_pipline
+   !mkdir train_vespa
+   %cd train_vespa 
+   !mkdir dataset
+   %cd dataset
+   !mkdir luckymall_bonanza_combined_AgeGender_equalize
+   %cd luckymall_bonanza_combined_AgeGender_equalize
+   !pwd
+   
+   #copy dataset to this folder
+   !cp -r /content/Rethinking_of_PAR/luckyone_attribute_dataset/total_images_with_augmentation /app/mnt/565CA5115CA4ED45/project/attributes/training_pipline/train_vespa/dataset/luckymall_bonanza_combined_AgeGender_equalize
+   
+   #start trainging
+   !sh train_gpu.sh
+   ```
+
